@@ -60,7 +60,7 @@ ax.yaxis.set_major_formatter(tick)
 # Bar plot
 sns.barplot(x='currency', y='exposure(usd)', data=exposures_sorted, palette="rocket", ax=ax)
 
-ax.set_title('Exposures (expressed in USD)\n-{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
+ax.set_title('Open Exposures (in USD)\n-{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
 ax.set_ylabel('')
 ax.set_xlabel('')
 
@@ -93,7 +93,7 @@ open_ccys_live.loc[(open_ccys_live['chg_pct'] < 0) & (open_ccys_live['L/S']=='L'
 sns.barplot(x='positive_pnl', y='Pair', data=open_ccys_live, label='MTM', color='green', ax=ax2)
 sns.barplot(x='negative_pnl', y='Pair', data=open_ccys_live, label='MTM', color='red', ax=ax2)
 
-ax2.set_title('Marked to Market\n-{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
+ax2.set_title('Marked To Market\n-{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
 ax2.set_ylabel('CCY Pair')
 ax2.set_xlabel('% PnL')
 ax2.xaxis.set_major_formatter(mtick.PercentFormatter())
