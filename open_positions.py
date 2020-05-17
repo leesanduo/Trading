@@ -7,16 +7,61 @@ from pandas import ExcelFile
 df = pd.read_excel(r"/Users/sanduo/Documents/Trading/TradingJournal (FX) (2020).xlsx", \
                    sheet_name = 'Trade Log', \
                   skiprows = 2)
-print(df)
+print(df.head())
 
 # Using the Date column to filter out all the trades I've executed so far
 filter = df['Date'].isna()
 df_alltrades = df[~filter]
-print(df_alltrades)
 
 # Using the Price Out column to identify which trades I have not closed yet, i.e. Open Positions
 open_filter = df_alltrades['Price Out'].isna()
 open_positions = df_alltrades[open_filter]
-open_ccys = open_positions[['L/S','Pair', 'Price In', 'SL', 'TP']]
+pd.options.display.float_format = '{:,.2f}'.format # Format with commas and round off to 2dp
+
+open_ccys = open_positions[['L/S','Notional','Pair', 'Price In', 'SL', 'TP']]
 print(open_ccys)
 print('There are {} open positions currently.'.format(open_ccys['Pair'].count()))
+
+# Show Exposure in each currencies
+pd.options.mode.chained_assignment = None  # safely disable SettingWithCopyWarning warning
+
+map={'L':1, 'S':-1} # map for +ve and -ve exposures
+sign = open_ccys['L/S'].map(map)
+open_ccys['Notional'] *= sign
+
+open_ccys['pricing_notional'] = open_ccys['Notional'] * open_ccys['Price In'] * (-1)
+open_ccys['base_ccy'] = open_ccys['Pair'].str[:3]
+open_ccys['pricing_ccy'] = open_ccys['Pair'].str[-3:]
+
+base = open_ccys[['base_ccy','Notional']].rename(columns={'base_ccy':'currency','Notional':'notional'})
+pricing = open_ccys[['pricing_ccy', 'pricing_notional']].rename(columns={'pricing_ccy':'currency','pricing_notional':'notional'})
+combined = base.append(pricing)
+
+
+# Use current exchange rates XXXUSD to convert all to USD exposures
+usd_rates_df = df[['xxxusd','rates']].dropna()
+merged = pd.merge(combined, usd_rates_df, left_on='currency', right_on='xxxusd', how='left')
+merged['exposure(usd)'] = merged.notional * merged.rates
+
+exposures = merged.groupby('currency')['exposure(usd)'].sum().reset_index()
+exposures_sorted = exposures.sort_values('exposure(usd)')
+print(exposures_sorted)
+
+# Plot exposures
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import seaborn as sns
+from datetime import datetime
+sns.set(style="darkgrid")
+fig, ax = plt.subplots(figsize=(8,4))
+# Format y ticks
+fmt = '${x:,.0f}'
+tick = mtick.StrMethodFormatter(fmt)
+ax.yaxis.set_major_formatter(tick)
+# Bar plot
+sns.barplot(x='currency', y='exposure(usd)', data=exposures_sorted, palette="rocket", ax=ax)
+
+ax.set_title('Exposures (expressed in USD) \n -{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
+ax.set_ylabel('')
+ax.set_xlabel('')
+plt.show()
