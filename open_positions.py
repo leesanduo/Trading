@@ -52,17 +52,17 @@ import matplotlib.ticker as mtick
 import seaborn as sns
 from datetime import datetime
 sns.set(style="darkgrid")
-fig, ax = plt.subplots(figsize=(8,4))
+fig, ax = plt.subplots(1,2, figsize=(12,5))
 # Format y ticks
 fmt = '${x:,.0f}'
 tick = mtick.StrMethodFormatter(fmt)
-ax.yaxis.set_major_formatter(tick)
+ax[0].yaxis.set_major_formatter(tick)
 # Bar plot
-sns.barplot(x='currency', y='exposure(usd)', data=exposures_sorted, palette="rocket", ax=ax)
+sns.barplot(x='currency', y='exposure(usd)', data=exposures_sorted, palette="rocket", ax=ax[0])
 
-ax.set_title('Open Exposures (in USD)\n-{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
-ax.set_ylabel('')
-ax.set_xlabel('')
+ax[0].set_title('Open Exposures (in USD)')
+ax[0].set_ylabel('')
+ax[0].set_xlabel('')
 
 
 ### Visualize MTM and distance to SL and TP
@@ -79,22 +79,26 @@ open_ccys_live['chg_pct']=((open_ccys_live['last']/open_ccys_live['Price In'])-1
 open_ccys_live['sl_pct']=((open_ccys_live['SL']/open_ccys_live['Price In'])-1)*100
 open_ccys_live['tp_pct']=((open_ccys_live['TP']/open_ccys_live['Price In'])-1)*100
 
-# Plot pnl_pct, on barh plot
-fig2, ax2 = plt.subplots(figsize=(10,5))
+# Plot MTM distances on horizontal bar plot
 
-sns.barplot(x='sl_pct', y='Pair', data=open_ccys_live, label='SL', color='red', alpha=0.3, ax=ax2)
-sns.barplot(x='tp_pct', y='Pair', data=open_ccys_live, label='TP', color='green', alpha=0.3, ax=ax2)
+sns.barplot(x='sl_pct', y='Pair', data=open_ccys_live, label='SL', color='red', alpha=0.3, ax=ax[1])
+sns.barplot(x='tp_pct', y='Pair', data=open_ccys_live, label='TP', color='green', alpha=0.3, ax=ax[1])
 
 open_ccys_live.loc[(open_ccys_live['chg_pct'] >= 0) & (open_ccys_live['L/S']=='L'), 'positive_pnl'] = open_ccys_live['chg_pct']
 open_ccys_live.loc[(open_ccys_live['chg_pct'] < 0) & (open_ccys_live['L/S']=='S'), 'positive_pnl'] = open_ccys_live['chg_pct']
 open_ccys_live.loc[(open_ccys_live['chg_pct'] >= 0) & (open_ccys_live['L/S']=='S'), 'negative_pnl'] = open_ccys_live['chg_pct']
 open_ccys_live.loc[(open_ccys_live['chg_pct'] < 0) & (open_ccys_live['L/S']=='L'), 'negative_pnl'] = open_ccys_live['chg_pct']
 
-sns.barplot(x='positive_pnl', y='Pair', data=open_ccys_live, label='MTM', color='green', ax=ax2)
-sns.barplot(x='negative_pnl', y='Pair', data=open_ccys_live, label='MTM', color='red', ax=ax2)
+sns.barplot(x='positive_pnl', y='Pair', data=open_ccys_live, label='ITM', color='green', ax=ax[1])
+sns.barplot(x='negative_pnl', y='Pair', data=open_ccys_live, label='OTM', color='red', ax=ax[1])
 
-ax2.set_title('Marked To Market\n-{}-'.format(datetime.now().strftime("%d/%m/%Y %H:%M")))
-ax2.set_ylabel('CCY Pair')
-ax2.set_xlabel('% PnL')
-ax2.xaxis.set_major_formatter(mtick.PercentFormatter())
+ax[1].set_title('Marked To Market')
+ax[1].set_ylabel('')
+ax[1].set_xlabel('% PnL')
+ax[1].xaxis.set_major_formatter(mtick.PercentFormatter())
+ax[1].legend(loc="upper left", fontsize=8)
+
+
+fig.suptitle(datetime.now().strftime("%d/%m/%Y\n%H:%M"), fontsize=9)
+fig.tight_layout()
 plt.show()
