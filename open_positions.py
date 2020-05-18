@@ -92,7 +92,7 @@ open_ccys_live.loc[(open_ccys_live['chg_pct'] < 0) & (open_ccys_live['L/S']=='L'
 sns.barplot(x='positive_pnl', y='Pair', data=open_ccys_live, label='ITM', color='green', ax=ax[1])
 sns.barplot(x='negative_pnl', y='Pair', data=open_ccys_live, label='OTM', color='red', ax=ax[1])
 
-ax[1].set_title('Marked To Market')
+ax[1].set_title('Mark To Market')
 ax[1].set_ylabel('')
 ax[1].set_xlabel('% PnL')
 ax[1].xaxis.set_major_formatter(mtick.PercentFormatter())
